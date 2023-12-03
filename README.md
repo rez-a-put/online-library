@@ -2,9 +2,9 @@
 This repo contains a simple application using Go. This project uses an Online Library implementation as an example.
 
 # Features
-- Get book list by genre
+- Get book list by genre :
     Getting list of books by it's genre / subject. Book list data retrieved from openlibrary API
-- Update pickup time of books
+- Update pickup time of books :
     To update date and time of when the book will be picked up by user. Once a book has a picked up date then it can't be changed until later it was picked up
 
 # Installation
