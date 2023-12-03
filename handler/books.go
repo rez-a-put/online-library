@@ -18,22 +18,23 @@ func GetList(w http.ResponseWriter, r *http.Request) {
 		limit, page, statusCode int
 		reqGetBooks             *model.ReqGetBooks
 		retData                 []*model.RetData
-		respMsg                 string
 		err                     error
 	)
 
 	// simple genre validation
 	if parGenre == "" {
 		statusCode = http.StatusBadRequest
-		respMsg = utils.ErrorRequired("genre of books")
 
-		utils.ReturnResponse(w, statusCode, respMsg, nil)
+		utils.ReturnResponse(w, statusCode, utils.ErrorRequired("genre of books"), nil)
 		return
 	}
 
 	// set up parameter for library api
 	limit, err = strconv.Atoi(parLimit)
 	page, err = strconv.Atoi(parPage)
+	if page == 0 {
+		page = 1
+	}
 	reqGetBooks = &model.ReqGetBooks{
 		Subjects: parGenre,
 		Limit:    limit,
@@ -41,13 +42,13 @@ func GetList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hit get books data library
-	retData, err = controller.GetBooksData(reqGetBooks)
+	retData, statusCode, err = controller.GetBooksData(reqGetBooks)
 	if err != nil {
-		statusCode = http.StatusBadRequest
-		respMsg = err.Error()
+		utils.ReturnResponse(w, statusCode, err.Error(), nil)
+		return
 	}
 
-	utils.ReturnResponse(w, http.StatusOK, respMsg, retData)
+	utils.ReturnResponse(w, statusCode, "", retData)
 }
 
 // SetPickup : set pickup schedule time for a book

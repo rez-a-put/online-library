@@ -7,6 +7,7 @@ import (
 	"online-library/model"
 	"online-library/utils"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,7 +21,7 @@ var (
 )
 
 // GetBooksData : to hit library api and return data
-func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, err error) {
+func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, statusCode int, err error) {
 	var (
 		respLibraryApi  *model.RespLibraryApi
 		baseURL         = utils.GetEnvByKey("LIBRARY_API_URL")
@@ -31,26 +32,41 @@ func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, err
 	subject = strings.ReplaceAll(subject, " ", "_")                                           // change spaces into underscores
 	subject = strings.ToLower(subject)                                                        // set string into lower case
 
+	params = "?"
+	if reqGetBooks.Limit > 0 {
+		params += "limit=" + strconv.Itoa(reqGetBooks.Limit) + "&"
+	}
+	if reqGetBooks.Offset > 0 {
+		params += "offset=" + strconv.Itoa(reqGetBooks.Offset) + "&"
+	}
+	params = strings.TrimSuffix(params, "&") // remove trailed ampersand
+	params = strings.TrimSuffix(params, "?") // remove trailed question mark
+
 	// hit library api
 	request, err = http.NewRequest("GET", baseURL+"/subjects/"+subject+".json"+params, nil)
 	if err != nil {
 		err = errors.New(utils.ErrorRetrieveData())
-		return nil, err
+		return nil, http.StatusBadRequest, err
 	}
 	response, err = client.Do(request)
 	if err != nil {
 		err = errors.New(utils.ErrorRetrieveData())
-		return nil, err
+		return nil, http.StatusBadRequest, err
 	}
 
 	// parse json from response body
 	err = json.NewDecoder(response.Body).Decode(&respLibraryApi)
 	if err != nil {
 		err = errors.New(utils.ErrorRetrieveData())
-		return nil, err
+		return nil, http.StatusBadRequest, err
 	}
 
 	defer response.Body.Close()
+
+	if respLibraryApi.DataCount == 0 {
+		err = errors.New(utils.ErrorEmptyData())
+		return nil, http.StatusOK, err
+	}
 
 	// setup return data
 	for _, v := range respLibraryApi.Works {
@@ -71,7 +87,7 @@ func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, err
 		retData = append(retData, data)
 	}
 
-	return retData, nil
+	return retData, http.StatusOK, nil
 }
 
 // SetBookPickup : to set pickup time of a book

@@ -7,7 +7,8 @@ type ReqGetBooks struct {
 }
 
 type RespLibraryApi struct {
-	Works []struct {
+	DataCount int `json:"work_count"`
+	Works     []struct {
 		Key     string `json:"key"`
 		Title   string `json:"title"`
 		Authors []struct {

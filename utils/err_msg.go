@@ -27,3 +27,7 @@ func ErrorWrongUserPass() string {
 func ErrorAlreadyPickedup() string {
 	return "Book already has pickup schedule"
 }
+
+func ErrorEmptyData() string {
+	return "There are no books for that genre"
+}
