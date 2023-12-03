@@ -28,6 +28,12 @@ func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, sta
 		params, subject string
 	)
 
+	// simple genre/subject validation
+	if reqGetBooks.Subjects == "" {
+		err = errors.New(utils.ErrorRequired("genre of books"))
+		return nil, http.StatusBadRequest, err
+	}
+
 	subject = regexp.MustCompile(`[^a-zA-Z0-9 ]+`).ReplaceAllString(reqGetBooks.Subjects, "") // remove all characters except letters, numbers, spaces
 	subject = strings.ReplaceAll(subject, " ", "_")                                           // change spaces into underscores
 	subject = strings.ToLower(subject)                                                        // set string into lower case
@@ -91,19 +97,11 @@ func GetBooksData(reqGetBooks *model.ReqGetBooks) (retData []*model.RetData, sta
 }
 
 // SetBookPickup : to set pickup time of a book
-func SetBookPickup(r *http.Request) (err error) {
+func SetBookPickup(reqPickup *model.ReqPickup) (err error) {
 	var (
-		reqPickup  *model.ReqPickup
 		pickupTime time.Time
 		isExist    bool
 	)
-
-	// parse json from request body
-	err = json.NewDecoder(r.Body).Decode(&reqPickup)
-	if err != nil {
-		err = errors.New(utils.ErrorFailedReadRequest())
-		return err
-	}
 
 	// parse pickup time
 	pickupTime, err = time.Parse(timeLayout, reqPickup.PickupTime)

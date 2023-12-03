@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"online-library/controller"
 	"online-library/model"
@@ -20,14 +21,6 @@ func GetList(w http.ResponseWriter, r *http.Request) {
 		retData                 []*model.RetData
 		err                     error
 	)
-
-	// simple genre validation
-	if parGenre == "" {
-		statusCode = http.StatusBadRequest
-
-		utils.ReturnResponse(w, statusCode, utils.ErrorRequired("genre of books"), nil)
-		return
-	}
 
 	// set up parameter for library api
 	limit, err = strconv.Atoi(parLimit)
@@ -53,10 +46,20 @@ func GetList(w http.ResponseWriter, r *http.Request) {
 
 // SetPickup : set pickup schedule time for a book
 func SetPickup(w http.ResponseWriter, r *http.Request) {
-	var err error
+	var (
+		reqPickup *model.ReqPickup
+		err       error
+	)
+
+	// parse json from request body
+	err = json.NewDecoder(r.Body).Decode(&reqPickup)
+	if err != nil {
+		utils.ReturnResponse(w, http.StatusBadRequest, utils.ErrorFailedReadRequest(), nil)
+		return
+	}
 
 	// set pickup time for a book
-	err = controller.SetBookPickup(r)
+	err = controller.SetBookPickup(reqPickup)
 	if err != nil {
 		utils.ReturnResponse(w, http.StatusBadRequest, err.Error(), nil)
 		return
